@@ -20,6 +20,7 @@ class classifylanguage:
 
         for values in statements:
             attribute1.insert(self.containsQ(values))
+            attribute2.insert(self.containsX(values))
      
      def containsQ(self, statement):
         """
@@ -28,6 +29,17 @@ class classifylanguage:
         :return:Boolean value representing the presence of a character
         """
         if statement.find('Q') < 0 or statement.find('q') < 0:
+            return False
+        else:
+            return True
+  
+    def containsX(self, statement):
+        """
+        Check for occurence of the character Q
+        :param statement:Input statement
+        :return:Boolean value representing the presence of a character
+        """
+        if statement.find('x') < 0 or statement.find('X') < 0:
             return False
         else:
             return True
