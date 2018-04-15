@@ -23,6 +23,7 @@ class classifylanguage:
             attribute2.insert(self.containsX(values))
             attribute3.insert(self.check_avg_word_length_greater_than_5(values))
             attribute4.insert(self.contains_dutch_dipthongs(values))
+            attribute5.insert(self.contains_eng_dipthongs(values))
             
      def containsQ(self, statement):
         """
@@ -71,6 +72,18 @@ class classifylanguage:
         """
         dutch_dipthongs = ['oe', 'eu', 'ei', 'ij', 'ui', 'uw', 'ou', 'aai', 'eeuw', 'ooi', 'ei', 'ieuw']
         for dipthongs in dutch_dipthongs:
+            if statement.find(dipthongs) > 0:
+                return True
+        return False
+    
+    def contains_eng_dipthongs(self, statement):
+        """
+        Check if the statement contains english dipthongs
+        :param statement:Input statement
+        :return:Boolean value representing the fact whether the statement contains english dipthongs
+        """
+        eng_dipthongs = ['ow', 'ou', 'ie', 'igh', 'ay', 'oi', 'oo', 'ea', 'ee', 'air', 'ure']
+        for dipthongs in eng_dipthongs:
             if statement.find(dipthongs) > 0:
                 return True
         return False
