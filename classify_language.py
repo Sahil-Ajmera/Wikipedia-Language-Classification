@@ -22,7 +22,8 @@ class classifylanguage:
             attribute1.insert(self.containsQ(values))
             attribute2.insert(self.containsX(values))
             attribute3.insert(self.check_avg_word_length_greater_than_5(values))
-     
+            attribute4.insert(self.contains_dutch_dipthongs(values))
+            
      def containsQ(self, statement):
         """
         Check for occurence of the character Q
@@ -61,6 +62,18 @@ class classifylanguage:
             return True
         else:
             return False
+  
+    def contains_dutch_dipthongs(self, statement):
+        """
+        Check if the statement contains dutch dipthongs
+        :param statement:Input statement
+        :return:Boolean value representing the fact whether the statement contains dutch dipthongs
+        """
+        dutch_dipthongs = ['oe', 'eu', 'ei', 'ij', 'ui', 'uw', 'ou', 'aai', 'eeuw', 'ooi', 'ei', 'ieuw']
+        for dipthongs in dutch_dipthongs:
+            if statement.find(dipthongs) > 0:
+                return True
+        return False
         
     def gather_data(self, file):
         """
