@@ -7,6 +7,30 @@ class classifylanguage:
 
     def train(self, file):
         statements, results = self.gather_data(file)
+        attribute1 = []
+        attribute2 = []
+        attribute3 = []
+        attribute4 = []
+        attribute5 = []
+        attribute6 = []
+        attribute7 = []
+        attribute8 = []
+        attribute9 = []
+        attribute10 = []
+
+        for values in statements:
+            attribute1.insert(self.containsQ(values))
+     
+     def containsQ(self, statement):
+        """
+        Check for occurence of the character Q
+        :param statement:Input statement
+        :return:Boolean value representing the presence of a character
+        """
+        if statement.find('Q') < 0 or statement.find('q') < 0:
+            return False
+        else:
+            return True
         
     def gather_data(self, file):
         """
@@ -41,6 +65,7 @@ class classifylanguage:
 
         return statements, results
 
+    
 def main():
     cl_obj = classifylanguage()
     cl_obj.train('train.dat')
