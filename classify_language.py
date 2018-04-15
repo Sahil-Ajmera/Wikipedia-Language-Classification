@@ -24,6 +24,7 @@ class classifylanguage:
             attribute3.insert(self.check_avg_word_length_greater_than_5(values))
             attribute4.insert(self.contains_dutch_dipthongs(values))
             attribute5.insert(self.contains_eng_dipthongs(values))
+            attribute6.insert(self.presence_of_van(values))
             
      def containsQ(self, statement):
         """
@@ -87,6 +88,17 @@ class classifylanguage:
             if statement.find(dipthongs) > 0:
                 return True
         return False
+    
+  def presence_of_van(self, statement):
+        """
+        Check if the statement contains the string van
+        :param statement:Input statement
+        :return:Boolean value representing the presence of the string 'van'
+        """
+        if statement.find('van') > 0:
+            return True
+        else:
+            return False
         
     def gather_data(self, file):
         """
