@@ -21,6 +21,7 @@ class classifylanguage:
         for values in statements:
             attribute1.insert(self.containsQ(values))
             attribute2.insert(self.containsX(values))
+            attribute3.insert(self.check_avg_word_length_greater_than_5(values))
      
      def containsQ(self, statement):
         """
@@ -43,6 +44,23 @@ class classifylanguage:
             return False
         else:
             return True
+
+    def check_avg_word_length_greater_than_5(self, statement):
+        """
+        Check the average word length of the statement
+        :param statement: Input statement
+        :return: Boolean value representing whether the average word size is greater than 5 or lesser than 5
+        """
+        words = statement.split()
+        total_word_size = 0
+        total_words = 0
+        for word in words:
+            total_word_size = total_word_size + len(word)
+            total_words = total_words + 1
+        if total_word_size/total_words > 5:
+            return True
+        else:
+            return False
         
     def gather_data(self, file):
         """
