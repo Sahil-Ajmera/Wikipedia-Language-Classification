@@ -25,6 +25,7 @@ class classifylanguage:
             attribute4.insert(self.contains_dutch_dipthongs(values))
             attribute5.insert(self.contains_eng_dipthongs(values))
             attribute6.insert(self.presence_of_van(values))
+            attribute7.insert(self.presence_of_de_het(values))
             
      def containsQ(self, statement):
         """
@@ -96,6 +97,17 @@ class classifylanguage:
         :return:Boolean value representing the presence of the string 'van'
         """
         if statement.find('van') > 0:
+            return True
+        else:
+            return False
+  
+    def presence_of_de_het(self, statement):
+        """
+        Check if the statement contains the string de and het
+        :param statement:Input statement
+        :return:Boolean value representing the presence of the word 'de' or 'het' or both
+        """
+        if statement.find('de') > 0 or statement.find('het') > 0:
             return True
         else:
             return False
