@@ -5,8 +5,9 @@ class classifylanguage:
     def __init__(self):
         print()
 
-    def train(self, file):
-        statements, results = self.gather_data(file)
+    def collect_data_dt(self, example_file, hypothesis_file):
+        # Gather data from example file
+        statements, results = self.gather_data(example_file)
         attribute1 = []
         attribute2 = []
         attribute3 = []
@@ -18,15 +19,249 @@ class classifylanguage:
         attribute9 = []
         attribute10 = []
 
-        for values in statements:
-            attribute1.insert(self.containsQ(values))
-            attribute2.insert(self.containsX(values))
-            attribute3.insert(self.check_avg_word_length_greater_than_5(values))
-            attribute4.insert(self.contains_dutch_dipthongs(values))
-            attribute5.insert(self.contains_eng_dipthongs(values))
-            attribute6.insert(self.presence_of_van(values))
-            attribute7.insert(self.presence_of_de_het(values))
-            
+        file = open(example_file)
+        for line in statements:
+            attribute1.append(self.containsQ(line))
+            attribute2.append(self.containsX(line))
+            attribute3.append(self.check_avg_word_length_greater_than_5(line))
+            attribute4.append(self.contains_dutch_dipthongs(line))
+            attribute5.append(self.contains_eng_dipthongs(line))
+            attribute6.append(self.presence_of_van(line))
+            attribute7.append(self.presence_of_de_het(line))
+            #attribute8.insert(self.check_average_e_used_greater_than_100(values))
+            #attribute9.insert(self.check_property9(values))
+            #attribute10.insert(self.check_property10(values))
+        attributes = []
+        attributes.append(attribute1)
+        attributes.append(attribute2)
+        attributes.append(attribute3)
+        attributes.append(attribute4)
+        attributes.append(attribute5)
+        attributes.append(attribute6)
+        attributes.append(attribute7)
+
+        number_lst = []
+        for i in range(len(results)):
+            number_lst.append(i)
+
+        seen = []
+        queue = Queue()
+        # Setting root for decision tree
+        root = helper(attributes, seen, results, number_lst, 0, None, None)
+
+        value = self.train_decision_tree(root,attributes, seen, results, number_lst, 0, None, None, queue)
+        # BFS for creating the remaining decision tree
+        while not queue.empty():
+            queue_obj = queue.get()
+            if type(queue_obj) != str:
+                predict = self.train_decision_tree(queue_obj,queue_obj.attributes, queue_obj.seen, queue_obj.results,
+                                                   queue_obj.total_results, queue_obj.depth,
+                                                   queue_obj.prediction_at_this_stage, queue_obj.bool,
+                                                   queue)
+            else:
+                print(queue_obj)
+        queue2 = Queue()
+        queue2.put(root)
+        print('\n')
+        self.traverse_tree(queue2)
+        # Saving the decision tree object in the hypothis file using pickle
+        filehandler = open(hypothesis_file, 'wb')
+        pickle.dump(root, filehandler)
+        
+    def predict(self,hypothesis,file):
+        
+        # Load hypothesis
+        object = pickle.load(open(hypothesis, 'rb'))
+        file_open =  open(file)
+        sentence_list = []
+        counter = 0
+        sentence = ''
+        for line in file_open:
+            words = line.split()
+
+        # Load test statements
+        for word in words:
+            if counter != 14:
+                sentence += word + ' '
+                counter += 1
+            else:
+                sentence_list.append(sentence)
+                sentence = ''
+                counter = 0
+
+        attribute1 = []
+        attribute2 = []
+        attribute3 = []
+        attribute4 = []
+        attribute5 = []
+        attribute6 = []
+        attribute7 = []
+        attribute8 = []
+
+        file_open.seek(0)
+        for line in file_open:
+            attribute1.append(self.containsQ(line))
+            attribute2.append(self.containsX(line))
+            attribute3.append(self.check_avg_word_length_greater_than_5(line))
+            attribute4.append(self.contains_dutch_dipthongs(line))
+            attribute5.append(self.contains_eng_dipthongs(line))
+            attribute6.append(self.presence_of_van(line))
+            attribute7.append(self.presence_of_de_het(line))
+        attributes = []
+        attributes.append(attribute1)
+        attributes.append(attribute2)
+        attributes.append(attribute3)
+        attributes.append(attribute4)
+        attributes.append(attribute5)
+        attributes.append(attribute6)
+        attributes.append(attribute7)
+        #attributes.append(attribute8)
+
+        statement = 0
+        file_open.seek(0)
+        # Prediction using decision tree object loaded using pickel
+        for sentence in file_open:
+            object_temp = object
+            while type(object_temp.value) != str:
+                value = attributes[object_temp.value][statement]
+                if value == 'True':
+                    object_temp = object_temp.left
+                else:
+                    object_temp = object_temp.right
+            print(object_temp.value)
+           
+    def train_decision_tree(self,root,attributes,seen, results,total_results, depth, prevprediction, bool,queue):
+        # If depth reached returned the plurality of the remaining samples
+        if depth == len(attributes) - 1:
+            counten = 0
+            countnl = 0
+            for index in total_results:
+                if results[index] is 'en':
+                    counten = counten + 1
+                elif results[index] is 'nl':
+                    countnl = countnl + 1
+            if counten > countnl:
+                queue.put('en')
+                root.value = 'en'
+            else:
+                queue.put('nl')
+                root.value = 'nl'
+        # If no examples left return the previous predictions
+        elif len(total_results) == 0:
+            queue.put(prevprediction)
+            root.value = prevprediction
+        # If all examples of the same type return the type
+        elif self.number_of_diff_values(results, total_results) == 0:
+            queue.put(results[total_results[0]])
+            root.value = results[total_results[0]]
+        # If all the attributes have been used in a portion of the tree 
+        # We dont use same attributes in the same subtree
+        elif len(attributes) == len(seen):
+            counten = 0
+            countnl = 0
+            for index in total_results:
+                if results[index] is 'en':
+                    counten = counten + 1
+                elif results[index] is 'nl':
+                    countnl = countnl + 1
+            if counten > countnl:
+                queue.put('en')
+                root.value = 'en'
+            else:
+                queue.put('nl')
+                root.value = 'nl'
+        else:
+        # Calculation of best attribute to split on based on information gain and entropy
+            gain = []
+            results_en = 0
+            results_nl = 0
+            for index in total_results:
+                if results[index] == 'en':
+                    results_en = results_en + 1
+                else:
+                    results_nl = results_nl + 1
+            for index_attribute in range(len(attributes)):
+                if index_attribute in seen:
+                    gain.append(-100)
+                    continue
+                else:
+                    count_true_en = 0
+                    count_true_nl = 0
+                    count_false_en = 0
+                    count_false_nl = 0
+                    for index in total_results:
+                        if attributes[index_attribute][index] is True and results[index] == 'en':
+                            count_true_en = count_true_en + 1
+                        elif attributes[index_attribute][index] is True and results[index] == 'nl':
+                            count_true_nl = count_true_nl + 1
+                        elif attributes[index_attribute][index] is False and results[index] == 'en':
+                            count_false_en = count_false_en + 1
+                        elif attributes[index_attribute][index] is False and results[index] == 'nl':
+                            count_false_nl = count_false_nl + 1
+
+                    if(count_true_nl + count_true_en == 0) or (count_false_en + count_false_nl == 0):
+                        gain_for_attribute = 0
+                        gain.append(gain_for_attribute)
+                        continue
+
+                    # Handliing certain outlier conditions
+                    if count_true_en == 0:
+                        rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en))
+                        rem_false_value = ((count_false_en + count_false_nl) / (results_nl + results_nl)) * self.entropy(
+                            count_false_en / (count_false_nl + count_false_en))
+                    elif count_false_en == 0:
+                        rem_false_value = ((count_false_en + count_false_nl)/ (results_nl + results_en))
+                        rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en)) * self.entropy(
+                            count_true_en / (count_true_nl + count_true_en))
+                    else:
+                            rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en)) * self.entropy(
+                                count_true_en / (count_true_nl + count_true_en))
+
+                            rem_false_value = ((count_false_en + count_false_nl) / (results_nl + results_en)) * self.entropy(
+                                count_false_en / (count_false_nl + count_false_en))
+
+                    gain_for_attribute = self.entropy(results_en / (results_en + results_nl)) - (rem_true_value +
+                                                                                              rem_false_value)
+                    gain.append(gain_for_attribute)
+
+
+            max_gain_attribute = gain.index(max(gain))
+            #print('Splitting attribute',max_gain_attribute,'on depth:', depth)
+
+            seen.append(max_gain_attribute)
+
+            index_True = []
+            index_False = []
+            # Sampling samples of maximum gain attribute
+            for index in total_results:
+                if attributes[max_gain_attribute][index] is True:
+                    index_True.append(index)
+                else:
+                    index_False.append(index)
+
+            # Prediction at this stage
+            prediction_at_this_stage = ''
+
+            if results_en > results_nl:
+                prediction_at_this_stage = 'en'
+            else:
+                prediction_at_this_stage = 'nl'
+
+            bool_false = False
+            bool_true = True
+            root.value = max_gain_attribute
+            # Samples corresponding to true value of maximum gain attribute
+            left_obj = helper(attributes, seen, results, index_True, depth + 1,
+                                                          prediction_at_this_stage, bool_true)
+            # Samples corresponding to false values of maximum gain attribute
+            right_obj = helper(attributes, seen, results, index_False, depth + 1,
+                                                          prediction_at_this_stage, bool_false)
+            root.left = left_obj
+            root.right = right_obj
+            queue.put(left_obj)
+            queue.put(right_obj)
+            return max_gain_attribute
+        
      def containsQ(self, statement):
         """
         Check for occurence of the character Q
@@ -148,7 +383,17 @@ class classifylanguage:
     
 def main():
     cl_obj = classifylanguage()
-    cl_obj.train('train.dat')
+    option = int(input('Train or predict? Enter 0 or 1'))
+    if option == 0:
+        print('Synatax :train <examples> <hypothesisOut> <learning-type> ')
+        if sys.argv[4] == 'dt':
+            cl_obj.collect_data_dt(sys.argv[2], sys.argv[3])
+        else:
+            cl_obj.collect_data_ada(sys.argv[2], sys.argv[3])
+    else:
+        print('Syntax :predict <hypothesis> <file>')
+        #hypothesis = input('Enter filename')
+        cl_obj.predict(sys.argv[2], sys.argv[3])
 
 if __name__=="__main__":
     main()
