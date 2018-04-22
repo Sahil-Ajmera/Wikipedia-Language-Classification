@@ -68,9 +68,7 @@ class classifylanguage:
         filehandler = open(hypothesis_file, 'wb')
         pickle.dump(root, filehandler)
         
-    def predict(self,hypothesis,file):
-        
-        # Load hypothesis
+    def predict_dt(self,hypothesis,file):
         object = pickle.load(open(hypothesis, 'rb'))
         file_open =  open(file)
         sentence_list = []
@@ -79,15 +77,15 @@ class classifylanguage:
         for line in file_open:
             words = line.split()
 
-        # Load test statements
-        for word in words:
-            if counter != 14:
-                sentence += word + ' '
-                counter += 1
-            else:
-                sentence_list.append(sentence)
-                sentence = ''
-                counter = 0
+
+            for word in words:
+                if counter != 14:
+                    sentence += word + ' '
+                    counter += 1
+                else:
+                    sentence_list.append(sentence)
+                    sentence = ''
+                    counter = 0
 
         attribute1 = []
         attribute2 = []
@@ -99,7 +97,8 @@ class classifylanguage:
         attribute8 = []
 
         file_open.seek(0)
-        for line in file_open:
+
+        for line in sentence_list:
             attribute1.append(self.containsQ(line))
             attribute2.append(self.containsX(line))
             attribute3.append(self.check_avg_word_length_greater_than_5(line))
@@ -119,8 +118,8 @@ class classifylanguage:
 
         statement = 0
         file_open.seek(0)
-        # Prediction using decision tree object loaded using pickel
-        for sentence in file_open:
+        # Check whehter sentence_list or file_open
+        for sentence in sentence_list:
             object_temp = object
             while type(object_temp.value) != str:
                 value = attributes[object_temp.value][statement]
@@ -380,6 +379,222 @@ class classifylanguage:
 
         return statements, results
 
+    def predict_ada(self,hypothesis_file, input_test_file):
+        object = pickle.load(open(hypothesis_file, 'rb'))
+        file_open =  open(input_test_file)
+        sentence_list = []
+        counter = 0
+        sentence = ''
+        for line in file_open:
+            words = line.split()
+
+
+            for word in words:
+                if counter != 14:
+                    sentence += word + ' '
+                    counter += 1
+                else:
+                    sentence_list.append(sentence)
+                    sentence = ''
+                    counter = 0
+
+        attribute1 = []
+        attribute2 = []
+        attribute3 = []
+        attribute4 = []
+        attribute5 = []
+        attribute6 = []
+        attribute7 = []
+        attribute8 = []
+
+        file_open.seek(0)
+        for line in sentence_list:
+            attribute1.append(self.containsQ(line))
+            attribute2.append(self.containsX(line))
+            attribute3.append(self.check_avg_word_length_greater_than_5(line))
+            attribute4.append(self.contains_dutch_dipthongs(line))
+            attribute5.append(self.contains_eng_dipthongs(line))
+            attribute6.append(self.presence_of_van(line))
+            attribute7.append(self.presence_of_de_het(line))
+        attributes = []
+        attributes.append(attribute1)
+        attributes.append(attribute2)
+        attributes.append(attribute3)
+        attributes.append(attribute4)
+        attributes.append(attribute5)
+        attributes.append(attribute6)
+        attributes.append(attribute7)
+        #attributes.append(attribute8
+
+        file_open.seek(0)
+        statement_pointer = 0
+        hypot_weights = object[1]
+        hypot_list = object[0]
+        for sentence in sentence_list:
+            total_summation = 0
+            for index in range(len(object[0])):
+                total_summation += self.make_final_prediction(hypot_list[index],sentence,attributes,statement_pointer) * hypot_weights[index]
+
+            if total_summation > 0:
+                print('en')
+            else:
+                print('nl')
+            statement_pointer += 1
+            
+    def collect_data_ada(self,example_file,hypothesis_file):
+        statements, results = self.gather_data(example_file)
+        weights = [1/len(statements)] * len(statements)
+
+        # Number of hypothesis
+        number_of_decision_stumps = 10
+        number_of_examples_correctly_classified = 0
+        number_of_examples_incorrectly_classified = 0
+
+        attribute1 = []
+        attribute2 = []
+        attribute3 = []
+        attribute4 = []
+        attribute5 = []
+        attribute6 = []
+        attribute7 = []
+        attribute8 = []
+        attribute9 = []
+        attribute10 = []
+
+
+        for line in statements:
+            attribute1.append(self.containsQ(line))
+            attribute2.append(self.containsX(line))
+            attribute3.append(self.check_avg_word_length_greater_than_5(line))
+            attribute4.append(self.contains_dutch_dipthongs(line))
+            attribute5.append(self.contains_eng_dipthongs(line))
+            attribute6.append(self.presence_of_van(line))
+            attribute7.append(self.presence_of_de_het(line))
+
+        attributes = []
+        attributes.append(attribute1)
+        attributes.append(attribute2)
+        attributes.append(attribute3)
+        attributes.append(attribute4)
+        attributes.append(attribute5)
+        attributes.append(attribute6)
+        attributes.append(attribute7)
+
+        queue = Queue()
+        number_lst = []
+        stump_values = []
+        hypot_weights = [0.000000000000000000000000001] * number_of_decision_stumps
+
+        for i in range(len(results)):
+            number_lst.append(i)
+
+        root = helper(attributes,None,results, number_lst, 0, None, None)
+
+        for hypothesis in range(1,number_of_decision_stumps):
+            stump = self.return_stump(0, root, attributes, results,number_lst, weights , queue)
+            error = 0.000000000000000000000000000000001
+            for index in range(len(statements)):
+                if self.prediction(stump,statements[index],attributes,index) != results[index]:
+                    error = error + weights[index]
+            for index in range(len(statements)):
+                if self.prediction(stump, statements[index], attributes, index) == results[index]:
+                     weights[index] = weights[index] * ((error)/(1 - error))
+            # ASK ABOUT NORMALIZING WEIGHTS FROM SOMEONE
+            hypot_weights[hypothesis] = math.log(((1 - error)/(error)),2.0)
+            stump_values.append(stump)
+
+        filehandler = open(hypothesis_file, 'wb')
+        pickle.dump((stump_values,hypot_weights), filehandler)
+
+
+    def prediction(self,stump,statement,attributes,index):
+        attribute_value = stump.value
+        if attributes[attribute_value][index] is True:
+            return stump.left.value
+        else:
+            return stump.right.value
+
+    def return_stump(self,depth ,root, attributes, results,total_results, weights , queue):
+        gain = []
+        results_en = 0
+        results_nl = 0
+        for index in total_results:
+            if results[index] == 'en':
+                results_en = results_en + 1*weights[index]
+            else:
+                results_nl = results_nl + 1*weights[index]
+        for index_attribute in range(len(attributes)):
+                count_true_en = 0
+                count_true_nl = 0
+                count_false_en = 0
+                count_false_nl = 0
+                for index in total_results:
+                    if attributes[index_attribute][index] is True and results[index] == 'en':
+                        count_true_en = count_true_en + 1*weights[index]
+                    elif attributes[index_attribute][index] is True and results[index] == 'nl':
+                        count_true_nl = count_true_nl + 1*weights[index]
+                    elif attributes[index_attribute][index] is False and results[index] == 'en':
+                        count_false_en = count_false_en + 1*weights[index]
+                    elif attributes[index_attribute][index] is False and results[index] == 'nl':
+                        count_false_nl = count_false_nl + 1*weights[index]
+
+                # Handliing certain outlier conditions
+                if count_true_en == 0:
+                    rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en))
+                    rem_false_value = ((count_false_en + count_false_nl) / (results_nl + results_nl)) * self.entropy(
+                        count_false_en / (count_false_nl + count_false_en))
+                elif count_false_en == 0:
+                    rem_false_value = ((count_false_en + count_false_nl) / (results_nl + results_en))
+                    rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en)) * self.entropy(
+                        count_true_en / (count_true_nl + count_true_en))
+                else:
+                    rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en)) * self.entropy(
+                        count_true_en / (count_true_nl + count_true_en))
+
+                    rem_false_value = ((count_false_en + count_false_nl) / (results_nl + results_en)) * self.entropy(
+                        count_false_en / (count_false_nl + count_false_en))
+
+                gain_for_attribute = self.entropy(results_en / (results_en + results_nl)) - (rem_true_value +
+                                                                                             rem_false_value)
+                gain.append(gain_for_attribute)
+
+        max_gain_attribute = gain.index(max(gain))
+        root.value = max_gain_attribute
+        count_max_true_en = 0
+        count_max_true_nl = 0
+        count_max_false_en = 0
+        count_max_false_nl = 0
+
+        for index in range(len(attributes[max_gain_attribute])):
+            if attributes[max_gain_attribute][index] is True:
+                if results[index] == 'en':
+                    count_max_true_en = count_max_true_en + 1*weights[index]
+                else:
+                    count_max_true_nl = count_max_true_nl + 1*weights[index]
+            else:
+                    if results[index] == 'en':
+                        count_max_false_en = count_max_false_en + 1 * weights[index]
+                    else:
+                        count_max_false_nl = count_max_false_nl + 1 * weights[index]
+
+        left_obj = helper(attributes, None, results, None, depth + 1,
+                          None, None)
+        right_obj = helper(attributes, None, results, None, depth + 1,
+                          None, None)
+        if count_max_true_en > count_max_true_nl:
+            left_obj.value = 'en'
+        else:
+            left_obj.value = 'nl'
+        if count_max_false_en > count_max_false_nl:
+            right_obj.value = 'en'
+        else:
+            right_obj.value = 'nl'
+
+        root.left = left_obj
+        root.right = right_obj
+
+        return root
+
     
 def main():
     cl_obj = classifylanguage()
@@ -391,9 +606,13 @@ def main():
         else:
             cl_obj.collect_data_ada(sys.argv[2], sys.argv[3])
     else:
-        print('Syntax :predict <hypothesis> <file>')
+        # ASK ABOUT ADABOOST PREDICTION
+        print('Syntax :predict <hypothesis> <file> <testing-type')
         #hypothesis = input('Enter filename')
-        cl_obj.predict(sys.argv[2], sys.argv[3])
+        if sys.argv[4] == 'dt':
+            cl_obj.predict_dt(sys.argv[2], sys.argv[3])
+        else:
+            cl_obj.predict_ada(sys.argv[2], sys.argv[3])
 
 if __name__=="__main__":
     main()
