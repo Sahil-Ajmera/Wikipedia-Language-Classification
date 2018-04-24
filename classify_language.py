@@ -595,6 +595,13 @@ class classifylanguage:
 
         return root
 
+    def check_for_een(self,statement):
+        words = statement.split()
+        for word in words:
+            if word.lower().replace(',','') == 'een':
+                return True
+            else:
+                return False
     
 def main():
     """
