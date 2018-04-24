@@ -267,6 +267,8 @@ class classifylanguage:
         :param file:input training file
         :return:list of statements and final predictions
         """
+
+        # Open file
         file_details = open(file, encoding="utf-8-sig")
         all_details = ''
         for file_lines in file_details:
@@ -275,12 +277,12 @@ class classifylanguage:
         # Get all the statements
         statements = all_details.split('|')
         all_data_stripped_space = all_details.split()
+        
         for index in range(len(statements)):
             if index < 1:
                 continue
             statements[index] = statements[index][:-4]
         statements = statements[1:]
-        print(statements[:])
 
         # Get all the results
 
@@ -290,10 +292,9 @@ class classifylanguage:
             if values.startswith('nl|') or values.startswith('en|'):
                 results.insert(pointer, values[0:2])
                 pointer = pointer + 1
-        print(results)
 
         return statements, results
-
+    
     def collect_data_ada(self, example_file, hypothesis_file):
         """
         Collection of data for Adaboost , collection of stumps formed
