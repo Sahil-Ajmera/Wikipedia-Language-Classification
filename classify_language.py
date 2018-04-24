@@ -261,91 +261,6 @@ class classifylanguage:
             queue.put(right_obj)
             return max_gain_attribute
         
-     def containsQ(self, statement):
-        """
-        Check for occurence of the character Q
-        :param statement:Input statement
-        :return:Boolean value representing the presence of a character
-        """
-        if statement.find('Q') < 0 or statement.find('q') < 0:
-            return False
-        else:
-            return True
-  
-    def containsX(self, statement):
-        """
-        Check for occurence of the character Q
-        :param statement:Input statement
-        :return:Boolean value representing the presence of a character
-        """
-        if statement.find('x') < 0 or statement.find('X') < 0:
-            return False
-        else:
-            return True
-
-    def check_avg_word_length_greater_than_5(self, statement):
-        """
-        Check the average word length of the statement
-        :param statement: Input statement
-        :return: Boolean value representing whether the average word size is greater than 5 or lesser than 5
-        """
-        words = statement.split()
-        total_word_size = 0
-        total_words = 0
-        for word in words:
-            total_word_size = total_word_size + len(word)
-            total_words = total_words + 1
-        if total_word_size/total_words > 5:
-            return True
-        else:
-            return False
-  
-    def contains_dutch_dipthongs(self, statement):
-        """
-        Check if the statement contains dutch dipthongs
-        :param statement:Input statement
-        :return:Boolean value representing the fact whether the statement contains dutch dipthongs
-        """
-        dutch_dipthongs = ['oe', 'eu', 'ei', 'ij', 'ui', 'uw', 'ou', 'aai', 'eeuw', 'ooi', 'ei', 'ieuw']
-        for dipthongs in dutch_dipthongs:
-            if statement.find(dipthongs) > 0:
-                return True
-        return False
-    
-    def contains_eng_dipthongs(self, statement):
-        """
-        Check if the statement contains english dipthongs
-        :param statement:Input statement
-        :return:Boolean value representing the fact whether the statement contains english dipthongs
-        """
-        eng_dipthongs = ['ow', 'ou', 'ie', 'igh', 'ay', 'oi', 'oo', 'ea', 'ee', 'air', 'ure']
-        for dipthongs in eng_dipthongs:
-            if statement.find(dipthongs) > 0:
-                return True
-        return False
-    
-  def presence_of_van(self, statement):
-        """
-        Check if the statement contains the string van
-        :param statement:Input statement
-        :return:Boolean value representing the presence of the string 'van'
-        """
-        if statement.find('van') > 0:
-            return True
-        else:
-            return False
-  
-    def presence_of_de_het(self, statement):
-        """
-        Check if the statement contains the string de and het
-        :param statement:Input statement
-        :return:Boolean value representing the presence of the word 'de' or 'het' or both
-        """
-        if statement.find('de') > 0 or statement.find('het') > 0:
-            return True
-        else:
-            return False
-        
     def gather_data(self, file):
         """
         Gathers data from the train.dat file for training
@@ -594,7 +509,108 @@ class classifylanguage:
         root.right = right_obj
 
         return root
+    
+    def check_for_en(self,statement):
+        words = statement.split()
+        for word in words:
+            if word.lower().replace(',','') == 'en':
+                return True
+        return False
 
+    def check_for_common_dutch_words(self,statement):
+        list = ['naar','be','ik','het','voor','niet','met','hij','zijn','ze','wij','ze','er','hun','zo','over','hem','weten'
+                'jouw','dan','ook','onze','deze','ons','meest']
+        words = statement.split()
+        for word in words:
+            if word.lower().replace(',','') in list:
+                return True
+        return False
+
+    def check_for_common_english_words(self,statement):
+        list = ['to','be','I', 'it','for','not','with','he','his','they','we','she','there', 'their','so', 'about','me',
+                'him','know','your','than','then','also','our','these','us','most']
+        words = statement.split()
+        for word in words:
+            if word.lower().replace(',','') in list:
+                return True
+        return False
+    def containsQ(self, statement):
+        """
+        Check for occurence of the character Q
+        :param statement:Input statement
+        :return:Boolean value representing the presence of a character
+        """
+        if statement.find('Q') < 0 or statement.find('q') < 0:
+            return False
+        else:
+            return True
+
+    def containsX(self, statement):
+        """
+        Check for occurence of the character Q
+        :param statement:Input statement
+        :return:Boolean value representing the presence of a character
+        """
+        if statement.find('x') < 0 or statement.find('X') < 0:
+            return False
+        else:
+            return True
+
+    def check_avg_word_length_greater_than_5(self, statement):
+        """
+        Check the average word length of the statement
+        :param statement: Input statement
+        :return: Boolean value representing whether the average word size is greater than 5 or lesser than 5
+        """
+        words = statement.split()
+        total_word_size = 0
+        total_words = 0
+        for word in words:
+            total_word_size = total_word_size + len(word)
+            total_words = total_words + 1
+        if total_word_size / total_words > 5:
+            return True
+        else:
+            return False
+
+    def presence_of_van(self, statement):
+        """
+        Check if the statement contains the string van
+        :param statement:Input statement
+        :return:Boolean value representing the presence of the string 'van'
+        """
+        words = statement.split()
+        for word in words:
+            if word.lower().replace(',','') == 'van':
+                return True
+        return False
+
+
+    def presence_of_de_het(self, statement):
+        """
+        Check if the statement contains the string de and het
+        :param statement:Input statement
+        :return:Boolean value representing the presence of the word 'de' or 'het' or both
+        """
+        words = statement.split()
+        for word in words:
+            if word.lower().replace(',','') == 'de' or word.lower().replace(',','') =='het':
+                return True
+        return False
+
+    def presence_of_a_an_the(self,statement):
+        """
+        Check for the presence of articles a an the
+        If they are present , chances are statement is in  english language
+        :param statement:
+        :return: Boolean value reprenting the presence of articles
+        """
+        words = statement.split()
+        for word in words:
+            if word.lower() == 'a' or word.lower() =='an' or word.lower() =='the':
+                return True
+        return False
+    
     def check_for_een(self,statement):
         """
         Checking for the presence of the word een
