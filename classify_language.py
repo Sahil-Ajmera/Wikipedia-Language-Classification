@@ -510,7 +510,12 @@ class classifylanguage:
 
         return root
     
-    def check_for_en(self,statement):
+   def check_for_en(self,statement):
+        """
+        Checking for the presence of the word en in the sentence
+        :param statement:Input Statement
+        :return:Boolean value representing the presence or absence of the word
+        """
         words = statement.split()
         for word in words:
             if word.lower().replace(',','') == 'en':
@@ -518,6 +523,11 @@ class classifylanguage:
         return False
 
     def check_for_common_dutch_words(self,statement):
+        """
+        Checking for the presence of common dutch words
+        :param statement:Input Statement
+        :return:Boolean value representing the presence or absence of the common dutch words
+        """
         list = ['naar','be','ik','het','voor','niet','met','hij','zijn','ze','wij','ze','er','hun','zo','over','hem','weten'
                 'jouw','dan','ook','onze','deze','ons','meest']
         words = statement.split()
@@ -527,6 +537,11 @@ class classifylanguage:
         return False
 
     def check_for_common_english_words(self,statement):
+        """
+        Checking for the presence of common english words
+        :param statement: Input statement
+        :return: Boolean value representing the presence of common english words
+        """
         list = ['to','be','I', 'it','for','not','with','he','his','they','we','she','there', 'their','so', 'about','me',
                 'him','know','your','than','then','also','our','these','us','most']
         words = statement.split()
@@ -534,44 +549,6 @@ class classifylanguage:
             if word.lower().replace(',','') in list:
                 return True
         return False
-    def containsQ(self, statement):
-        """
-        Check for occurence of the character Q
-        :param statement:Input statement
-        :return:Boolean value representing the presence of a character
-        """
-        if statement.find('Q') < 0 or statement.find('q') < 0:
-            return False
-        else:
-            return True
-
-    def containsX(self, statement):
-        """
-        Check for occurence of the character Q
-        :param statement:Input statement
-        :return:Boolean value representing the presence of a character
-        """
-        if statement.find('x') < 0 or statement.find('X') < 0:
-            return False
-        else:
-            return True
-
-    def check_avg_word_length_greater_than_5(self, statement):
-        """
-        Check the average word length of the statement
-        :param statement: Input statement
-        :return: Boolean value representing whether the average word size is greater than 5 or lesser than 5
-        """
-        words = statement.split()
-        total_word_size = 0
-        total_words = 0
-        for word in words:
-            total_word_size = total_word_size + len(word)
-            total_words = total_words + 1
-        if total_word_size / total_words > 5:
-            return True
-        else:
-            return False
 
     def presence_of_van(self, statement):
         """
@@ -610,7 +587,7 @@ class classifylanguage:
             if word.lower() == 'a' or word.lower() =='an' or word.lower() =='the':
                 return True
         return False
-    
+
     def check_for_een(self,statement):
         """
         Checking for the presence of the word een
