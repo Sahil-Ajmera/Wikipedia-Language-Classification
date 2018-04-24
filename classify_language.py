@@ -597,22 +597,27 @@ class classifylanguage:
 
     
 def main():
+    """
+    Main Function
+    :return: None
+    """
     cl_obj = classifylanguage()
-    option = int(input('Train or predict? Enter 0 or 1'))
-    if option == 0:
-        print('Synatax :train <examples> <hypothesisOut> <learning-type> ')
-        if sys.argv[4] == 'dt':
-            cl_obj.collect_data_dt(sys.argv[2], sys.argv[3])
-        else:
-            cl_obj.collect_data_ada(sys.argv[2], sys.argv[3])
-    else:
-        # ASK ABOUT ADABOOST PREDICTION
-        print('Syntax :predict <hypothesis> <file> <testing-type')
-        #hypothesis = input('Enter filename')
-        if sys.argv[4] == 'dt':
-            cl_obj.predict_dt(sys.argv[2], sys.argv[3])
-        else:
-            cl_obj.predict_ada(sys.argv[2], sys.argv[3])
+    # Check if right command line arguments given
+    try:
+        if sys.argv[1] == 'train':
+            if sys.argv[4] == 'dt':
+                cl_obj.collect_data_dt(sys.argv[2], sys.argv[3])
+            else:
+                cl_obj.collect_data_ada(sys.argv[2], sys.argv[3])
+        elif sys.argv[1] == 'predict':
+            if sys.argv[4] == 'dt':
+                cl_obj.predict_dt(sys.argv[2], sys.argv[3])
+            else:
+                cl_obj.predict_ada(sys.argv[2], sys.argv[3])
+    except:
+        print('Syntax :train <examples> <hypothesisOut> <learning-type>')
+        print('or')
+        print('Syntax :predict <hypothesis> <file> <testing-type(dt or ada)>')
 
 if __name__=="__main__":
     main()
