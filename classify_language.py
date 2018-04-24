@@ -596,13 +596,18 @@ class classifylanguage:
         return root
 
     def check_for_een(self,statement):
+        """
+        Checking for the presence of the word een
+        :param statement:Input 15-word statement
+        :return:Boolean value representing the presence of the word 'een' in the 15-word sentence
+        """
         words = statement.split()
         for word in words:
             if word.lower().replace(',','') == 'een':
                 return True
             else:
                 return False
-    
+            
 def main():
     """
     Main Function
