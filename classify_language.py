@@ -207,7 +207,7 @@ class classifylanguage:
         :param total_results:Index of examples that are there at this level
         :param depth:Level in consideration
         :param prevprediction:Prediction made before this depth
-        :return:
+        :return:None
         """
 
         # If depth is reached return the plurality of the remaining set
@@ -262,7 +262,6 @@ class classifylanguage:
                     results_en = results_en + 1
                 else:
                     results_nl = results_nl + 1
-
             # For each attribute
             for index_attribute in range(len(attributes)):
 
@@ -416,7 +415,7 @@ class classifylanguage:
         weights = [1 / len(statements)] * len(statements)
 
         # Number of hypothesis
-        number_of_decision_stumps = 50000
+        number_of_decision_stumps = 325
 
         attribute1 = []
         attribute2 = []
@@ -499,7 +498,7 @@ class classifylanguage:
                 weights[index] = weights[index] / total
 
             # Updated values for hypothseis weight
-            hypot_weights[hypothesis] = math.log(((1 - error) / (error)),2.0)
+            hypot_weights[hypothesis] = math.log(((1 - error) / (error)),2)
             stump_values.append(stump)
 
         # Dump the set of generated hypothesis
@@ -710,7 +709,6 @@ class classifylanguage:
         :return:
         """
         attribute_value = stump.value
-
         if attributes[attribute_value][index] is True:
             if stump.left.value == 'en':
                 return 1
@@ -849,8 +847,7 @@ class classifylanguage:
         for word in words:
             if word.lower().replace(',','') == 'een':
                 return True
-            else:
-                return False
+        return False
 
     def check_presence_of_and(self,sentence):
         """
