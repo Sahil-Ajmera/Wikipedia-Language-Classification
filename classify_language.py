@@ -9,13 +9,12 @@ import sys
 
 
 class classifylanguage:
-
     __slots__ = 'train_file'
 
     def __init__(self):
         print()
-        
-   def predict_dt(self, hypothesis, file):
+
+    def predict_dt(self, hypothesis, file):
         """
         Does the prediction for the decision tree
         :param hypothesis:Input decision tree
@@ -39,6 +38,7 @@ class classifylanguage:
                     sentence += word + ' '
                     counter += 1
                 else:
+                    sentence += word
                     sentence_list.append(sentence)
                     sentence = ''
                     counter = 0
@@ -95,6 +95,7 @@ class classifylanguage:
                     object_temp = object_temp.right
             print(object_temp.value)
             statement = statement + 1
+
 
     def number_of_diff_values(self, values, total):
         """
@@ -185,8 +186,8 @@ class classifylanguage:
         # Dumping the hypothesis to a file using pickle
         filehandler = open(hypothesis_file, 'wb')
         pickle.dump(root, filehandler)
-            
-   def check_for_0_gain(self,values):
+
+    def check_for_0_gain(self,values):
         """
         If 0 gain then return
         :param values:values of gain for the level
@@ -194,7 +195,7 @@ class classifylanguage:
         """
         if max(values) == 0:
             return False
-           
+
     def train_decision_tree(self, root, attributes, seen, results, total_results, depth, prevprediction):
         """
         Decides on the best splitting attribute for a given depth , make a node for that and connects it with
@@ -366,7 +367,9 @@ class classifylanguage:
             self.train_decision_tree(right_obj,attributes,seen,results,index_False,depth + 1,prediction_at_this_stage)
 
             del seen[-1]
-        
+
+
+
     def gather_data(self, file):
         """
         Gathers data from the train.dat file for training
@@ -383,7 +386,7 @@ class classifylanguage:
         # Get all the statements
         statements = all_details.split('|')
         all_data_stripped_space = all_details.split()
-        
+
         for index in range(len(statements)):
             if index < 1:
                 continue
@@ -400,7 +403,7 @@ class classifylanguage:
                 pointer = pointer + 1
 
         return statements, results
-    
+
     def collect_data_ada(self, example_file, hypothesis_file):
         """
         Collection of data for Adaboost , collection of stumps formed
@@ -496,7 +499,7 @@ class classifylanguage:
                 weights[index] = weights[index] / total
 
             # Updated values for hypothseis weight
-            hypot_weights[hypothesis] = math.log(((1 - error)), 2.0) / (error)
+            hypot_weights[hypothesis] = math.log(((1 - error) / (error)),2.0)
             stump_values.append(stump)
 
         # Dump the set of generated hypothesis
@@ -633,6 +636,7 @@ class classifylanguage:
                     sentence += word + ' '
                     counter += 1
                 else:
+                    sentence += word
                     sentence_list.append(sentence)
                     sentence = ''
                     counter = 0
@@ -708,9 +712,15 @@ class classifylanguage:
         attribute_value = stump.value
 
         if attributes[attribute_value][index] is True:
-            return 1
+            if stump.left.value == 'en':
+                return 1
+            else:
+                return -1
         else:
-            return -1
+            if stump.right.value == 'en':
+                return 1
+            else:
+                return -1
 
     def check_avg_word_length_greater_than_5(self, statement):
         """
@@ -729,18 +739,6 @@ class classifylanguage:
         else:
             return False
 
-    def check_presence_of_and(self,sentence):
-        """
-
-        :param sentence:
-        :return:
-        """
-        words = sentence.split()
-        for word in words:
-            if word == 'and' and word == 'of':
-                return True
-        return False
-     
     def containsQ(self, statement):
         """
         Check for occurence of the character Q
@@ -762,8 +760,8 @@ class classifylanguage:
             return False
         else:
             return True
-    
-   def check_for_en(self,statement):
+
+    def check_for_en(self,statement):
         """
         Checking for the presence of the word en in the sentence
         :param statement:Input Statement
@@ -853,7 +851,19 @@ class classifylanguage:
                 return True
             else:
                 return False
-            
+
+    def check_presence_of_and(self,sentence):
+        """
+
+        :param sentence:
+        :return:
+        """
+        words = sentence.split()
+        for word in words:
+            if word == 'and' and word == 'of':
+                return True
+        return False
+
 def main():
     """
     Main Function
@@ -868,7 +878,7 @@ def main():
             else:
                 cl_obj.collect_data_ada(sys.argv[2], sys.argv[3])
         elif sys.argv[1] == 'predict':
-            if sys.argv[4] == 'dt':
+            if sys.argv[4] =='dt':
                 cl_obj.predict_dt(sys.argv[2], sys.argv[3])
             else:
                 cl_obj.predict_ada(sys.argv[2], sys.argv[3])
@@ -877,5 +887,5 @@ def main():
         print('or')
         print('Syntax :predict <hypothesis> <file> <testing-type(dt or ada)>')
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
