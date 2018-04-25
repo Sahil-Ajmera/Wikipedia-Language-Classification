@@ -415,7 +415,7 @@ class classifylanguage:
         weights = [1 / len(statements)] * len(statements)
 
         # Number of hypothesis
-        number_of_decision_stumps = 325
+        number_of_decision_stumps = 50
 
         attribute1 = []
         attribute2 = []
@@ -467,11 +467,12 @@ class classifylanguage:
             number_lst.append(i)
 
         # Initialization of the root
-        root = helper(attributes, None, results, number_lst, 0, None, None)
+
 
         # Adaboost algorithm for training
         for hypothesis in range(0, number_of_decision_stumps):
 
+            root = helper(attributes, None, results, number_lst, 0, None, None)
             # For every hypothesis index generate a hypotesis to be added
             stump = self.return_stump(0, root, attributes, results, number_lst, weights)
             error = 0
@@ -488,7 +489,7 @@ class classifylanguage:
 
                 # Check for number of examples that do mathc with the hypothesis output value and update weights of examples
                 if self.prediction(stump, statements[index], attributes, index) == results[index]:
-                    weights[index] = weights[index] * ((error) / (1 - error))
+                    weights[index] = weights[index] * error / (1 - error)
                     correct = correct + 1
             total = 0
             # Calculation for normalization
@@ -696,9 +697,6 @@ class classifylanguage:
                 print('nl')
             statement_pointer += 1
 
-
-
-
     def make_final_prediction(self, stump, sentence, attributes, index):
         """
         Returns prediction based on the input hypothesis(stump) in consideration
@@ -833,7 +831,7 @@ class classifylanguage:
         """
         words = statement.split()
         for word in words:
-            if word.lower() == 'a' or word.lower() =='an' or word.lower() =='the':
+            if word.lower().replace(',','') == 'a' or word.lower().replace(',','') =='an' or word.lower().replace(',','') =='the':
                 return True
         return False
 
@@ -851,13 +849,13 @@ class classifylanguage:
 
     def check_presence_of_and(self,sentence):
         """
-
-        :param sentence:
-        :return:
+        Checking presence of 'and' in the sentence
+        :param sentence:Input sentence
+        :return:Boolean value representing the presence of 'and'
         """
         words = sentence.split()
         for word in words:
-            if word == 'and' and word == 'of':
+            if word.lower().replace(',','') == 'and':
                 return True
         return False
 
