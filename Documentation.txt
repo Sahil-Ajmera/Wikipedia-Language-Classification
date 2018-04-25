@@ -1,0 +1,24 @@
+Main file : classify.py
+-----------------------------------------------------------------------------------------------------
+Input to the program
+	For Training  --- 'Syntax :train <examples> <hypothesisOut> <learning-type>'
+	
+	For Testing   --- 'Syntax :predict <hypothesis> <file> <testing-type(dt or ada)>'
+-----------------------------------------------------------------------------------------------------
+Decision tree parameter settings
+	For changing depth , assign new value to depth variable in train_decision_tree_function
+	Helper.py for creating nodes of the decision tree
+-----------------------------------------------------------------------------------------------------	
+	
+AdaBoost parameter setting
+	For changing number of stumps , assign value to number_of_decision_stumps in collect_data_ada function	
+	As the number of decision stumps are large initially the training process might take some time
+-----------------------------------------------------------------------------------------------------
+Models
+	Models kept in dt-train.obj for decision tree
+		and ada-train.obj for adaboost 
+-----------------------------------------------------------------------------------------------------
+Train.dat contains the training examples in a specific format
+
+Test.dat containst the testing examples in a specific format
+-----------------------------------------------------------------------------------------------------
