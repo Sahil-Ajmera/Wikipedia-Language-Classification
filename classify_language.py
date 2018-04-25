@@ -1,82 +1,38 @@
+"""
+Author : Sahil Ajmera
+Wikipedia Language classification using Decision tree and Adaboost
+"""
+import math
+from helper import *
+import pickle
+import sys
+
+
 class classifylanguage:
 
     __slots__ = 'train_file'
 
     def __init__(self):
         print()
-
-    def collect_data_dt(self, example_file, hypothesis_file):
-        # Gather data from example file
-        statements, results = self.gather_data(example_file)
-        attribute1 = []
-        attribute2 = []
-        attribute3 = []
-        attribute4 = []
-        attribute5 = []
-        attribute6 = []
-        attribute7 = []
-        attribute8 = []
-        attribute9 = []
-        attribute10 = []
-
-        file = open(example_file)
-        for line in statements:
-            attribute1.append(self.containsQ(line))
-            attribute2.append(self.containsX(line))
-            attribute3.append(self.check_avg_word_length_greater_than_5(line))
-            attribute4.append(self.contains_dutch_dipthongs(line))
-            attribute5.append(self.contains_eng_dipthongs(line))
-            attribute6.append(self.presence_of_van(line))
-            attribute7.append(self.presence_of_de_het(line))
-            #attribute8.insert(self.check_average_e_used_greater_than_100(values))
-            #attribute9.insert(self.check_property9(values))
-            #attribute10.insert(self.check_property10(values))
-        attributes = []
-        attributes.append(attribute1)
-        attributes.append(attribute2)
-        attributes.append(attribute3)
-        attributes.append(attribute4)
-        attributes.append(attribute5)
-        attributes.append(attribute6)
-        attributes.append(attribute7)
-
-        number_lst = []
-        for i in range(len(results)):
-            number_lst.append(i)
-
-        seen = []
-        queue = Queue()
-        # Setting root for decision tree
-        root = helper(attributes, seen, results, number_lst, 0, None, None)
-
-        value = self.train_decision_tree(root,attributes, seen, results, number_lst, 0, None, None, queue)
-        # BFS for creating the remaining decision tree
-        while not queue.empty():
-            queue_obj = queue.get()
-            if type(queue_obj) != str:
-                predict = self.train_decision_tree(queue_obj,queue_obj.attributes, queue_obj.seen, queue_obj.results,
-                                                   queue_obj.total_results, queue_obj.depth,
-                                                   queue_obj.prediction_at_this_stage, queue_obj.bool,
-                                                   queue)
-            else:
-                print(queue_obj)
-        queue2 = Queue()
-        queue2.put(root)
-        print('\n')
-        self.traverse_tree(queue2)
-        # Saving the decision tree object in the hypothis file using pickle
-        filehandler = open(hypothesis_file, 'wb')
-        pickle.dump(root, filehandler)
         
-    def predict_dt(self,hypothesis,file):
+   def predict_dt(self, hypothesis, file):
+        """
+        Does the prediction for the decision tree
+        :param hypothesis:Input decision tree
+        :param file:Input test file
+        :return:None
+        """
+
+        # Load decision tree model
         object = pickle.load(open(hypothesis, 'rb'))
-        file_open =  open(file)
+        file_open = open(file)
         sentence_list = []
         counter = 0
         sentence = ''
+
+        # Extract 15-word samples from the test file
         for line in file_open:
             words = line.split()
-
 
             for word in words:
                 if counter != 14:
@@ -95,17 +51,24 @@ class classifylanguage:
         attribute6 = []
         attribute7 = []
         attribute8 = []
+        attribute9 = []
+        attribute10 = []
+        attribute11 = []
 
-        file_open.seek(0)
-
+        # Based on the sentences fill the values for the attributes
         for line in sentence_list:
             attribute1.append(self.containsQ(line))
             attribute2.append(self.containsX(line))
             attribute3.append(self.check_avg_word_length_greater_than_5(line))
-            attribute4.append(self.contains_dutch_dipthongs(line))
-            attribute5.append(self.contains_eng_dipthongs(line))
-            attribute6.append(self.presence_of_van(line))
-            attribute7.append(self.presence_of_de_het(line))
+            attribute4.append(self.presence_of_van(line))
+            attribute5.append(self.presence_of_de_het(line))
+            attribute6.append(self.check_for_een(line))
+            attribute7.append(self.check_for_en(line))
+            attribute8.append(self.check_for_common_dutch_words(line))
+            attribute9.append(self.check_for_common_english_words(line))
+            attribute10.append(self.presence_of_a_an_the(line))
+            attribute11.append(self.check_presence_of_and(line))
+
         attributes = []
         attributes.append(attribute1)
         attributes.append(attribute2)
@@ -114,23 +77,139 @@ class classifylanguage:
         attributes.append(attribute5)
         attributes.append(attribute6)
         attributes.append(attribute7)
-        #attributes.append(attribute8)
+        attributes.append(attribute8)
+        attributes.append(attribute9)
+        attributes.append(attribute10)
+        attributes.append(attribute11)
 
         statement = 0
-        file_open.seek(0)
-        # Check whehter sentence_list or file_open
+
+        # For every statement run through the decision tree to find out the langauge for the examples
         for sentence in sentence_list:
             object_temp = object
             while type(object_temp.value) != str:
                 value = attributes[object_temp.value][statement]
-                if value == 'True':
+                if value is True:
                     object_temp = object_temp.left
                 else:
                     object_temp = object_temp.right
             print(object_temp.value)
+            statement = statement + 1
+
+    def number_of_diff_values(self, values, total):
+        """
+        To check for total positive or total negative examples in a set
+        :param values:Input set
+        :param total:Indices
+        :return:Return based on whether total negative or positive examples
+        """
+        value = values[total[0]]
+        for i in total:
+            if value != values[i]:
+                return 10
+        return 0
+
+    def entropy(self, value):
+        """
+        Entropy function
+        :param value:Input value
+        :return:Calculate entropy and return
+        """
+        if value == 1:
+            return 0
+        return (-1) * (value * math.log(value, 2.0) + (1 - value) * math.log((1 - value), 2.0))
+
+
+
+    def collect_data_dt(self, example_file, hypothesis_file):
+        """
+        Collection of data and calling the required functions
+        :param example_file:Training file
+        :param hypothesis_file:File to which hypothesis is to be written
+        :return:None
+        """
+
+        statements, results = self.gather_data(example_file)
+        print(len(results))
+        attribute1 = []
+        attribute2 = []
+        attribute3 = []
+        attribute4 = []
+        attribute5 = []
+        attribute6 = []
+        attribute7 = []
+        attribute8 = []
+        attribute9 = []
+        attribute10 = []
+        attribute11 = []
+
+        # For each line set the values for features for that line
+        for line in statements:
+            attribute1.append(self.containsQ(line))
+            attribute2.append(self.containsX(line))
+            attribute3.append(self.check_avg_word_length_greater_than_5(line))
+            attribute4.append(self.presence_of_van(line))
+            attribute5.append(self.presence_of_de_het(line))
+            attribute6.append(self.check_for_een(line))
+            attribute7.append(self.check_for_en(line))
+            attribute8.append(self.check_for_common_dutch_words(line))
+            attribute9.append(self.check_for_common_english_words(line))
+            attribute10.append(self.presence_of_a_an_the(line))
+            attribute11.append(self.check_presence_of_and(line))
+
+        attributes = []
+        attributes.append(attribute1)
+        attributes.append(attribute2)
+        attributes.append(attribute3)
+        attributes.append(attribute4)
+        attributes.append(attribute5)
+        attributes.append(attribute6)
+        attributes.append(attribute7)
+        attributes.append(attribute8)
+        attributes.append(attribute9)
+        attributes.append(attribute10)
+        attributes.append(attribute11)
+
+        number_lst = []
+        for i in range(len(results)):
+            number_lst.append(i)
+
+        # To keep track of attributes splitted along a path
+        seen = []
+        root = helper(attributes,None, results, number_lst, 0, None, None)
+
+        # Calling decision tree function here
+        value = self.train_decision_tree(root, attributes, seen, results, number_lst, 0, None)
+
+
+        # Dumping the hypothesis to a file using pickle
+        filehandler = open(hypothesis_file, 'wb')
+        pickle.dump(root, filehandler)
+            
+   def check_for_0_gain(self,values):
+        """
+        If 0 gain then return
+        :param values:values of gain for the level
+        :return:False if the max gain is 0
+        """
+        if max(values) == 0:
+            return False
            
-    def train_decision_tree(self,root,attributes,seen, results,total_results, depth, prevprediction, bool,queue):
-        # If depth reached returned the plurality of the remaining samples
+    def train_decision_tree(self, root, attributes, seen, results, total_results, depth, prevprediction):
+        """
+        Decides on the best splitting attribute for a given depth , make a node for that and connects it with
+        two nodes containing the left and right childs for the given so called root node
+        :param root: The node that is being considered right now
+        :param attributes:Total set of attributes and their values
+        :param seen:Every node that has been seen till now
+        :param results:Final results in a list
+        :param total_results:Index of examples that are there at this level
+        :param depth:Level in consideration
+        :param prevprediction:Prediction made before this depth
+        :return:
+        """
+
+        # If depth is reached return the plurality of the remaining set
         if depth == len(attributes) - 1:
             counten = 0
             countnl = 0
@@ -140,21 +219,23 @@ class classifylanguage:
                 elif results[index] is 'nl':
                     countnl = countnl + 1
             if counten > countnl:
-                queue.put('en')
                 root.value = 'en'
+                print('en')
             else:
-                queue.put('nl')
                 root.value = 'nl'
-        # If no examples left return the previous predictions
+                print('nl')
+
+        # If there are no examples left return the prediction made at the previous level
         elif len(total_results) == 0:
-            queue.put(prevprediction)
             root.value = prevprediction
-        # If all examples of the same type return the type
+            print(prevprediction)
+
+        # If there are only positive or only negative examples left return the prediction directly from the plurality
         elif self.number_of_diff_values(results, total_results) == 0:
-            queue.put(results[total_results[0]])
             root.value = results[total_results[0]]
-        # If all the attributes have been used in a portion of the tree 
-        # We dont use same attributes in the same subtree
+            print( results[total_results[0]])
+
+        # If all the attributes have been used for splitting along a given path return the prediction of the set of examples
         elif len(attributes) == len(seen):
             counten = 0
             countnl = 0
@@ -164,31 +245,40 @@ class classifylanguage:
                 elif results[index] is 'nl':
                     countnl = countnl + 1
             if counten > countnl:
-                queue.put('en')
                 root.value = 'en'
             else:
-                queue.put('nl')
                 root.value = 'nl'
+
+        # Find the attribute to split on
         else:
-        # Calculation of best attribute to split on based on information gain and entropy
             gain = []
             results_en = 0
             results_nl = 0
+
+            # Take the total number of positive and negative examples at this level
             for index in total_results:
                 if results[index] == 'en':
                     results_en = results_en + 1
                 else:
                     results_nl = results_nl + 1
+
+            # For each attribute
             for index_attribute in range(len(attributes)):
+
+                # Check if it has already been used for splitting so , no gain in splitting over it again
                 if index_attribute in seen:
-                    gain.append(-100)
+                    gain.append(0)
                     continue
+
+                # Else see for the best splitting attribute
                 else:
                     count_true_en = 0
                     count_true_nl = 0
                     count_false_en = 0
                     count_false_nl = 0
+
                     for index in total_results:
+
                         if attributes[index_attribute][index] is True and results[index] == 'en':
                             count_true_en = count_true_en + 1
                         elif attributes[index_attribute][index] is True and results[index] == 'nl':
@@ -198,40 +288,51 @@ class classifylanguage:
                         elif attributes[index_attribute][index] is False and results[index] == 'nl':
                             count_false_nl = count_false_nl + 1
 
-                    if(count_true_nl + count_true_en == 0) or (count_false_en + count_false_nl == 0):
+                    # If only positive or only negative examples remain at a particular point , no point in splitting
+                    if (count_true_nl + count_true_en == 0) or (count_false_en + count_false_nl == 0):
                         gain_for_attribute = 0
                         gain.append(gain_for_attribute)
                         continue
-
                     # Handliing certain outlier conditions
                     if count_true_en == 0:
-                        rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en))
-                        rem_false_value = ((count_false_en + count_false_nl) / (results_nl + results_nl)) * self.entropy(
+                        rem_true_value = 0
+                        # rem_false_value = 0
+                        rem_false_value = (
+                                          (count_false_en + count_false_nl) / (results_nl + results_nl)) * self.entropy(
                             count_false_en / (count_false_nl + count_false_en))
                     elif count_false_en == 0:
-                        rem_false_value = ((count_false_en + count_false_nl)/ (results_nl + results_en))
+                        rem_false_value = 0
+                        #rem_true_value = 0
                         rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en)) * self.entropy(
                             count_true_en / (count_true_nl + count_true_en))
                     else:
-                            rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en)) * self.entropy(
-                                count_true_en / (count_true_nl + count_true_en))
+                        rem_true_value = ((count_true_en + count_true_nl) / (results_nl + results_en)) * self.entropy(
+                            count_true_en / (count_true_nl + count_true_en))
 
-                            rem_false_value = ((count_false_en + count_false_nl) / (results_nl + results_en)) * self.entropy(
-                                count_false_en / (count_false_nl + count_false_en))
+                        rem_false_value = (
+                                          (count_false_en + count_false_nl) / (results_nl + results_en)) * self.entropy(
+                            count_false_en / (count_false_nl + count_false_en))
 
+                    # Find the gain for each attribute
                     gain_for_attribute = self.entropy(results_en / (results_en + results_nl)) - (rem_true_value +
-                                                                                              rem_false_value)
+                                                                                                 rem_false_value)
                     gain.append(gain_for_attribute)
+           # Check if the max gain is 0 then return back as no more gain possible along this path
+            continue_var = self.check_for_0_gain(gain)
+            if continue_var is False:
+                root.value = prevprediction
+                print(root.value)
+                return
 
-
+            # Select the max gain attribute
             max_gain_attribute = gain.index(max(gain))
-            #print('Splitting attribute',max_gain_attribute,'on depth:', depth)
 
             seen.append(max_gain_attribute)
 
             index_True = []
             index_False = []
-            # Sampling samples of maximum gain attribute
+
+            # Separate out true and false portion for the found out max gain attribute
             for index in total_results:
                 if attributes[max_gain_attribute][index] is True:
                     index_True.append(index)
@@ -249,17 +350,22 @@ class classifylanguage:
             bool_false = False
             bool_true = True
             root.value = max_gain_attribute
-            # Samples corresponding to true value of maximum gain attribute
-            left_obj = helper(attributes, seen, results, index_True, depth + 1,
-                                                          prediction_at_this_stage, bool_true)
-            # Samples corresponding to false values of maximum gain attribute
-            right_obj = helper(attributes, seen, results, index_False, depth + 1,
-                                                          prediction_at_this_stage, bool_false)
+
+            # Make left portion for the max gain attribute
+
+            left_obj = helper(attributes, None,results, index_True, depth + 1,
+                              prediction_at_this_stage, bool_true)
+            # Make right portion for the max gain attribute
+
+            right_obj = helper(attributes,None, results, index_False, depth + 1,
+                               prediction_at_this_stage, bool_false)
             root.left = left_obj
             root.right = right_obj
-            queue.put(left_obj)
-            queue.put(right_obj)
-            return max_gain_attribute
+            # Recurse left and right portions
+            self.train_decision_tree(left_obj,attributes,seen,results,index_True,depth + 1,prediction_at_this_stage)
+            self.train_decision_tree(right_obj,attributes,seen,results,index_False,depth + 1,prediction_at_this_stage)
+
+            del seen[-1]
         
     def gather_data(self, file):
         """
@@ -623,6 +729,18 @@ class classifylanguage:
         else:
             return False
 
+    def check_presence_of_and(self,sentence):
+        """
+
+        :param sentence:
+        :return:
+        """
+        words = sentence.split()
+        for word in words:
+            if word == 'and' and word == 'of':
+                return True
+        return False
+     
     def containsQ(self, statement):
         """
         Check for occurence of the character Q
